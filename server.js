@@ -43,7 +43,7 @@ app.use((ctx) => {
     return;
   }
 
-  const { url, headers, method } = ctx.request.query;
+  const { url, headers, method, id } = ctx.request.query;
 
   log(`INCOMING REQUEST: ${method} ${url}`);
 
@@ -63,8 +63,10 @@ app.use((ctx) => {
     return;
   }
 
+  const requestIdentifier = id || `${method} ${url}`;
+
   let didSendNow = false;
-  const existingCall = webhooks.get(url);
+  const existingCall = webhooks.get(requestIdentifier);
   if (existingCall) {
     clearTimeout(existingCall.timeout);
 
@@ -79,7 +81,7 @@ app.use((ctx) => {
     callWebhook(url, headers, method);
   }, DEBOUNCE_TIME_MS);
 
-  webhooks.set(url, {
+  webhooks.set(requestIdentifier, {
     firstCall: existingCall?.firstCall || Date.now(),
     timeout,
   });
